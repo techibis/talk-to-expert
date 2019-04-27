@@ -3,16 +3,9 @@
 'use strict';
  
 const functions = require('firebase-functions');
-const {WebhookClient} = require('dialogflow-fulfillment');
-const {Card, Suggestion} = require('dialogflow-fulfillment');
- 
-process.env.DEBUG = 'dialogflow:debug'; // enables lib debugging statements
- 
-exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, response) => {
-  const agent = new WebhookClient({ request, response });
-  console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
-  console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
- 
+console.log("test1");
+process.env.DEBUG = 'dialogflow:debug'; // enables lib debugging statements 
+
   function welcome(agent) {
     agent.add(`Welcome to my agent!`);
   }
@@ -22,18 +15,27 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     agent.add(`I'm sorry, can you try again?`);
   }
   
+  function expert(agent) {
+    agent.add(`Let's find you an expert`);
+  }
+
 //custom 
 const {dialogflow} = require ('actions-on-google');
 const WELCOME_INTENT = 'Default Welcome Intent';
 const FALLBACK_INTENT = 'Default Fallback Intent';
 const TALK_TO_EXPERT_INTENT = 'LookingForExpert';
 const EXPERT_TYPE_ENTITY = 'Whom';
+
 const app = dialogflow();
+
 app.intent(WELCOME_INTENT, (conv) => {
     conv.ask("welcome to Find an Expert! Ask for a knowledge expert.");
 });
 app.intent(FALLBACK_INTENT, (conv) => {
     conv.ask("Sorry, I am having trouble understanding you");
+});
+app.intent(TALK_TO_EXPERT_INTENT, (conv) => {
+    conv.ask("Lets find you an expert!");
 });
 
   // // Uncomment and edit to make your own intent handler
@@ -67,34 +69,32 @@ app.intent(FALLBACK_INTENT, (conv) => {
 
   // Run the proper function handler based on the matched Dialogflow intent name
   let intentMap = new Map();
-  intentMap.set('Talk to Expert', welcome);
+  intentMap.set('Talk to Expert', expert);
   // intentMap.set('your intent name here', yourFunctionHandler);
   // intentMap.set('your intent name here', googleAssistantHandler);
-  agent.handleRequest(intentMap);
   
-  //Integrate database
   const Datastore = require('@google-cloud/datastore');
-  const datastore = new Datastore();
+  const datastore = Datastore();
   
   //debug message below
   app.intent(TALK_TO_EXPERT_INTENT, (conv) => {
-    conv.ask("Going to look for "+ EXPERT_TYPE_ENTITY);
+    conv.ask("Going to look for2 "+ conv.parameters[EXPERT_TYPE_ENTITY].toLowerCase());
   });
     
-    const query1 = datastore.createQuery('Find-a-expert').filter('field', '=', EXPERT_TYPE_ENTITY);
+  const query1 = datastore.createQuery('experts').filter('field', '=', EXPERT_TYPE_ENTITY);
   
   app.intent(TALK_TO_EXPERT_INTENT, (conv) => {
-     const expert_type = conv.parameters[EXPERT_TYPE_ENTITY].toLowerCase();
-     if (expert_type == EXPERT_TYPE_ENTITY) { 
+     //const expert_type = conv.parameters[EXPERT_TYPE_ENTITY].toLowerCase();
+     if (expert_type == EXPERT_TYPE_ENTITY\) { 
          return datastore.runQuery(query1).then(results => {
             conv.ask(results[0][1].field + " was found at number " + results[0][1].phone);
         });
      } else {
-         conv.ask("Sorry, that kind of expert is not available.  Please request a different expert.");
+         //conv.ask("Sorry, that kind of expert is not available.  Please request a different expert.");
      }
 });
 
 
 exports.dialogflowFirebaseFulfillment = functions.https.onRequest(app);
-});
+ 
 
