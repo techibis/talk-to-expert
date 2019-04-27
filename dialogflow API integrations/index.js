@@ -76,13 +76,18 @@ app.intent(FALLBACK_INTENT, (conv) => {
   const Datastore = require('@google-cloud/datastore');
   const datastore = new Datastore();
   
-  const query1 = datastore.createQuery('LookingForExpert').filter('field', '=', EXPERT_TYPE_ENTITY);
+  //debug message below
+  app.intent(TALK_TO_EXPERT_INTENT, (conv) => {
+    conv.ask("Going to look for "+ EXPERT_TYPE_ENTITY);
+  });
+    
+    const query1 = datastore.createQuery('Find-a-expert').filter('field', '=', EXPERT_TYPE_ENTITY);
   
   app.intent(TALK_TO_EXPERT_INTENT, (conv) => {
      const expert_type = conv.parameters[EXPERT_TYPE_ENTITY].toLowerCase();
      if (expert_type == EXPERT_TYPE_ENTITY) { 
          return datastore.runQuery(query1).then(results => {
-            conv.ask(results[0][1].Quote);
+            conv.ask(results[0][1].field + " was found at number " + results[0][1].phone);
         });
      } else {
          conv.ask("Sorry, that kind of expert is not available.  Please request a different expert.");
