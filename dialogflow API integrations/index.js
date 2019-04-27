@@ -21,6 +21,20 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     agent.add(`I didn't understand`);
     agent.add(`I'm sorry, can you try again?`);
   }
+  
+//custom 
+const {dialogflow} = require ('actions-on-google');
+const WELCOME_INTENT = 'Default Welcome Intent';
+const FALLBACK_INTENT = 'Default Fallback Intent';
+const TALK_TO_EXPERT_INTENT = 'LookingForExpert';
+const EXPERT_TYPE_ENTITY = 'Whom';
+const app = dialogflow();
+app.intent(WELCOME_INTENT, (conv) => {
+    conv.ask("welcome to Find an Expert! Ask for a knowledge expert.");
+});
+app.intent(FALLBACK_INTENT, (conv) => {
+    conv.ask("Sorry, I am having trouble understanding you");
+});
 
   // // Uncomment and edit to make your own intent handler
   // // uncomment `intentMap.set('your intent name here', yourFunctionHandler);`
@@ -62,5 +76,20 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   const Datastore = require('@google-cloud/datastore');
   const datastore = new Datastore();
   
-  const query1 = datastore.createQuery('QuoteTable').filter('QuoteType', '=', 'Motivational');
+  const query1 = datastore.createQuery('LookingForExpert').filter('field', '=', EXPERT_TYPE_ENTITY);
+  
+  app.intent(TALK_TO_EXPERT_INTENT, (conv) => {
+     const expert_type = conv.parameters[EXPERT_TYPE_ENTITY].toLowerCase();
+     if (expert_type == EXPERT_TYPE_ENTITY) { 
+         return datastore.runQuery(query1).then(results => {
+            conv.ask(results[0][1].Quote);
+        });
+     } else {
+         conv.ask("Sorry, that kind of expert is not available.  Please request a different expert.");
+     }
 });
+
+
+exports.dialogflowFirebaseFulfillment = functions.https.onRequest(app);
+});
+
