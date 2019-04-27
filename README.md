@@ -3,7 +3,7 @@ Google Action application
 
 Folder descriptions:
 
-Website - Main website explaining the Talk to Expert Functionality and how to use it with you Google Enabled devices.
+Website - Main website explaining the Talk to Expert Functionality and how to use it with your Google Actions Enabled devices.
 
 Design-Diagrams - Sketches and Backlog creation during planning phase
 
